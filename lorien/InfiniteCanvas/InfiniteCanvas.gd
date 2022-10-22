@@ -13,6 +13,7 @@ onready var _circle_tool: CircleTool = $CircleTool
 onready var _eraser_tool: EraserTool = $EraserTool
 onready var _selection_tool: SelectionTool = $SelectionTool
 onready var _active_tool: CanvasTool = _brush_tool
+onready var _previous_tool: CanvasTool = _brush_tool
 onready var _strokes_parent: Node2D = $Viewport/Strokes
 onready var _camera: Camera2D = $Viewport/Camera2D
 onready var _viewport: Viewport = $Viewport
@@ -31,6 +32,7 @@ var _player_enabled := false
 var _colliders_enabled := false
 var _optimizer: BrushStrokeOptimizer
 var _scale := Config.DEFAULT_UI_SCALE
+var _got_pen_inverted := false
 
 # -------------------------------------------------------------------------------------------------
 func _ready():
@@ -62,6 +64,18 @@ func _gui_input(event: InputEvent) -> void:
 func _process_event(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		info.current_pressure = event.pressure
+
+		# Map pen button to EraserTool and switch back afterwards
+		if event.pen_inverted && !_got_pen_inverted:
+			_got_pen_inverted = true
+			_previous_tool = _active_tool
+			use_tool(Types.Tool.ERASER)
+		elif !event.pen_inverted  && _got_pen_inverted:
+			_got_pen_inverted = false
+			_active_tool = _previous_tool
+			_active_tool.enabled = true
+			if _active_tool == _brush_tool:
+				_use_optimizer = true
 
 	if event.is_action("deselect_all_strokes"):
 		if _active_tool == _selection_tool:

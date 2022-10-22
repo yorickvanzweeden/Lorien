@@ -73,7 +73,7 @@ func _process_event(event: InputEvent) -> void:
 	
 	if ! get_tree().is_input_handled():
 		_camera.tool_event(event)
-	if ! get_tree().is_input_handled():
+	if ! get_tree().is_input_handled() && event.device != -1:
 		if _active_tool.enabled:
 			_active_tool.tool_event(event)
 

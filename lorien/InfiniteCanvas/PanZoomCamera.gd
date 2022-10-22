@@ -13,7 +13,9 @@ var _is_input_enabled := true
 var _pan_active := false
 var _zoom_active := false
 
-var _current_zoom_level := 1.0
+var _prev_event:InputEventScreenDrag = null
+
+var _current_zoom_level := 2.0
 var _start_mouse_pos := Vector2(0.0, 0.0)
 
 # -------------------------------------------------------------------------------------------------
@@ -27,12 +29,46 @@ func do_center(screen_space_center_point: Vector2) -> void:
 	var delta := screen_space_center - screen_space_center_point
 	get_viewport().warp_mouse(screen_space_center)
 	_do_pan(delta)
-	
+
+# -------------------------------------------------------------------------------------------------
+func multi_touch_event(event: InputEventScreenDrag):
+	# First touch event
+	if _prev_event == null:
+		_prev_event = event
+		return
+
+	# Calculate relative movement (zooming in or out); regardless of which finger touch is current event
+	var diff_old = (event.position + event.relative) - (_prev_event.position + _prev_event.relative)
+	var diff_new = event.position - _prev_event.position
+	var diff = diff_old.length_squared() - diff_new.length_squared()
+	diff = max(diff, -1000) if diff < 0 else min(diff, 1000)
+
+	# If both fingers are moving in the same direction (panning), the difference is small
+	if abs(diff) < 500:
+		_do_pan(event.relative)
+	else:
+		var acceleration = max(min(log(event.speed.length()) / 2, 3), 0)
+		var delta = (diff / 25000) * _current_zoom_level * acceleration
+
+		# Mouse position is locked on the first finger; determine if current event is that finger
+		var mouse_pos = get_local_mouse_position()
+		var dist_mouse_event = mouse_pos.distance_squared_to(event.position + event.relative)
+		var dist_mouse_prev_event = mouse_pos.distance_squared_to(_prev_event.position + _prev_event.relative)
+
+		if dist_mouse_event < dist_mouse_prev_event:
+			var calc_pos = get_local_mouse_position() - diff_new * _current_zoom_level
+			_zoom_canvas(min(_current_zoom_level - delta, 7), (mouse_pos + calc_pos) / 2)
+
+	_prev_event = event
+
 # -------------------------------------------------------------------------------------------------
 func tool_event(event: InputEvent) -> void:
 	if _is_input_enabled:
+		if event is InputEventScreenDrag:
+			multi_touch_event(event)
+
 		if event is InputEventMouseButton:
-			
+
 			# Scroll wheel up/down to zoom
 			if event.button_index == BUTTON_WHEEL_DOWN:
 				if event.pressed:

@@ -69,6 +69,7 @@ func _process_event(event: InputEvent) -> void:
 		if event.pen_inverted && !_got_pen_inverted:
 			_got_pen_inverted = true
 			_previous_tool = _active_tool
+			_delete_selected_strokes()
 			use_tool(Types.Tool.ERASER)
 		elif !event.pen_inverted  && _got_pen_inverted:
 			_got_pen_inverted = false

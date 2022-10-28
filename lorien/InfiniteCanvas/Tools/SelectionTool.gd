@@ -40,6 +40,10 @@ func tool_event(event: InputEvent) -> void:
 	var copy_pressed := Utils.event_pressed_bug_workaround("copy_strokes", event)
 	var paste_pressed := Utils.event_pressed_bug_workaround("paste_strokes", event)
 	
+	if event is InputEventMouseMotion:
+		if event.button_mask == 4:
+			duplicate_pressed = true
+
 	if copy_pressed || duplicate_pressed:
 		var strokes := get_selected_strokes()
 		if strokes.size() > 0:
@@ -106,6 +110,8 @@ func tool_event(event: InputEvent) -> void:
 			_selection_rectangle.start_position = _selecting_start_pos
 			_selection_rectangle.end_position = _selecting_end_pos
 			_selection_rectangle.update()
+		elif event.button_mask == 4:
+			deselect_all_strokes()
 		elif _state == State.MOVING:
 			_mouse_moved_during_pressed = true
 			_move_selected_strokes()

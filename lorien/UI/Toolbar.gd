@@ -12,6 +12,7 @@ signal grid_enabled(enabled)
 signal brush_size_changed(size)
 signal canvas_background_changed(color)
 signal tool_changed(t)
+signal brush_color_changed(color)
 
 # -------------------------------------------------------------------------------------------------
 const BUTTON_HOVER_COLOR = Color("50ffd6")
@@ -187,3 +188,7 @@ func _change_active_tool_button(btn: TextureButton) -> void:
 # -------------------------------------------------------------------------------------------------
 func get_brush_color_button() -> Control:
 	return _color_button
+
+# -------------------------------------------------------------------------------------------------
+func _on_ColorButtonDirect_pressed(color: Color):
+	emit_signal("brush_color_changed", color)
